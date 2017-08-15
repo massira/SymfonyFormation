@@ -21,16 +21,23 @@ class ConfigCacheController
     /**
      * @var string
      */
-    const CACHE_PATH = '/var/www/symfony_formation/cache/appUserMatcher.php';
+    private $rootDir;
+
+    /**
+     * @var string
+     */
+    private $cachePath = '/var/www/symfony_formation/cache/appUserMatcher.php';
 
     /**
      * ConfigCacheController constructor.
      *
      * @param LoaderInterface $loader
+     * @param string          $rootDir
      */
-    public function __construct(LoaderInterface $loader)
+    public function __construct(LoaderInterface $loader, $rootDir)
     {
-        $this->loader = $loader;
+        $this->loader  = $loader;
+        $this->rootDir = $rootDir;
     }
 
     /**

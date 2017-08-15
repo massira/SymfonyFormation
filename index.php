@@ -8,9 +8,10 @@ use Config\Formation\Loader\YamlFileLoader;
 
 require 'vendor/autoload.php';
 
-$configPath       = __DIR__.'/src/Config';
+$rootDir          = __DIR__;
+$configPath       = $rootDir.'/src/Config';
 $locator          = new FileLocator([$configPath]);
 $resolver         = new LoaderResolver([new YamlFileLoader($locator)]);
 $delegatingLoader = new DelegatingLoader($resolver);
-$configCacheController = new ConfigCacheController($delegatingLoader);
+$configCacheController = new ConfigCacheController($delegatingLoader, $rootDir);
 $configCacheController->cache();
