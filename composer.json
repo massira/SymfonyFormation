@@ -1,0 +1,18 @@
+{
+    "name": "mohamedamine/symfony-config",
+    "description": "Code to illustrate the inner working of the config component",
+    "type": "project",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Massira",
+            "email": "mohamed.anbri92@gmail.com"
+        }
+    ],
+    "require": {
+        "symfony/config": "^3.3"
+    },
+    "autoload": {
+        "psr-4": { "Config\\Formation\\" : "src/"}
+    }
+}
