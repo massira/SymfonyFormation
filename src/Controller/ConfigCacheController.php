@@ -21,23 +21,25 @@ class ConfigCacheController
     /**
      * @var string
      */
-    private $rootDir;
+    private $cachePath;
 
     /**
      * @var string
      */
-    private $cachePath = '/var/www/symfony_formation/cache/appUserMatcher.php';
+    private $rootPath;
 
     /**
      * ConfigCacheController constructor.
      *
      * @param LoaderInterface $loader
-     * @param string          $rootDir
+     * @param string          $cachePath
+     * @param string          $rootPath
      */
-    public function __construct(LoaderInterface $loader, $rootDir)
+    public function __construct(LoaderInterface $loader, $cachePath, $rootPath)
     {
-        $this->loader  = $loader;
-        $this->rootDir = $rootDir;
+        $this->loader    = $loader;
+        $this->cachePath = $cachePath;
+        $this->rootPath  = $rootPath;
     }
 
     /**
@@ -46,18 +48,21 @@ class ConfigCacheController
     public function cache()
     {
         $resources = [];
-        $configCache = new ConfigCache(self::CACHE_PATH, true);
-        //If the cache is not fresh
+        //The second parameter is the debug mode
+        $configCache = new ConfigCache($this->cachePath, true);
+        //If the cache is not fresh(using timestamp and file modification time)
         if (!$configCache->isFresh()) {
             foreach ($this->getPaths() as $path) {
+                //Load the resource(manipulate the config values => container)
                 $this->loader->load($path);
+                //For each resource we create a class metadata
                 $resources[] = new FileResource($path);
             }
 
-            $code = 'Some Data 2';
-            echo self::CACHE_PATH;
+            //Here normally all config files are merged and validated and stored in the cache
+            $code = 'Some Data';
+            //Write the data into the cache, and serialize metadata classes(when debug mode is enabled)
             $configCache->write($code, $resources);
-            echo 'Success';
         }
     }
 
@@ -67,8 +72,8 @@ class ConfigCacheController
     private function getPaths()
     {
         return [
-            '/var/www/symfony_formation/src/Config/file_1.yml',
-            '/var/www/symfony_formation/src/Config/file_2.yml'
+            $this->rootPath.'/src/Resources/Config/file_1.yml',
+            $this->rootPath.'/src/Resources/Config/file_2.yml'
         ];
     }
 }
