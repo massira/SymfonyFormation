@@ -5,7 +5,7 @@ namespace Config\Formation\Config;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Symfony\Component\Config\Definition\Builder\NodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
-use Symfony\Component\Config\Definition\ConfigurationInterface
+use Symfony\Component\Config\Definition\ConfigurationInterface;
 
 /**
  * Class DatabaseConfiguration
@@ -14,7 +14,6 @@ use Symfony\Component\Config\Definition\ConfigurationInterface
  */
 class DatabaseConfiguration implements ConfigurationInterface
 {
-
     /**
      * @inheritdoc
      */
@@ -38,6 +37,17 @@ class DatabaseConfiguration implements ConfigurationInterface
                 ->end()
             ->end();
 
+        /*
+         * - $expBuilder->castToArray() : was added in symfony 3.3
+         * - Sometimes, to improve the user experience of your application or bundle, you may allow to use a simple string or numeric value
+         * where an array value is required. Use the castToArray() helper to turn those variables into arrays
+         */
+        $rootNode
+            ->children()
+                ->arrayNode('hosts')
+                    ->beforeNormalization()->castToArray()
+                ->end()
+            ->end();
 
         return $treeBuilder;
     }
