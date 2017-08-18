@@ -61,6 +61,7 @@ class DatabaseConfiguration implements ConfigurationInterface
                     ->end()
                 ->end()
             ->end();
+
             /*
              * -A prototype can be used to add a definition which may be repeated many times inside the current node.
              * -According to the prototype definition in the example below, it is possible to have multiple connection
@@ -80,7 +81,20 @@ class DatabaseConfiguration implements ConfigurationInterface
                     ->end()
                 ->end();
 
-        return $treeBuilder;
+            /*
+             * - $expBuilder->castToArray() : was added in symfony 3.3
+             * - Sometimes, to improve the user experience of your application or bundle, you may allow to use a simple
+             *   string or numeric value where an array value is required.
+             * - Use the castToArray() helper to turn those variables into arrays
+             */
+            $rootNode
+                ->children()
+                    ->arrayNode('hosts')
+                        ->beforeNormalization()->castToArray()
+                    ->end()
+                ->end();
+
+            return $treeBuilder;
     }
 }
 
