@@ -1,0 +1,7 @@
+database:
+    connection:
+        name: my_mysql_connection
+        driver: mysql
+        host: localhost
+        username: admin
+        password: admin

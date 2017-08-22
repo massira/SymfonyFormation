@@ -26,20 +26,20 @@ class ConfigCacheController
     /**
      * @var string
      */
-    private $rootPath;
+    private $configDir;
 
     /**
      * ConfigCacheController constructor.
      *
      * @param LoaderInterface $loader
      * @param string          $cachePath
-     * @param string          $rootPath
+     * @param string          $configDir
      */
-    public function __construct(LoaderInterface $loader, $cachePath, $rootPath)
+    public function __construct(LoaderInterface $loader, $cachePath, $configDir)
     {
         $this->loader    = $loader;
         $this->cachePath = $cachePath;
-        $this->rootPath  = $rootPath;
+        $this->configDir  = $configDir;
     }
 
     /**
@@ -72,8 +72,8 @@ class ConfigCacheController
     private function getPaths()
     {
         return [
-            $this->rootPath.'/src/Resources/Config/file_1.yml',
-            $this->rootPath.'/src/Resources/Config/file_2.yml'
+            $this->configDir.'/file_1.yml',
+            $this->configDir.'/file_2.yml'
         ];
     }
 }
