@@ -47,19 +47,14 @@ class DatabaseConfiguration implements ConfigurationInterface
                 ->integerNode('value_inside_a_range')
                     ->min(-50)->max(50)
                 ->end()
+                ->append($this->getEnumNodeConfig()) //Append section of definition
+                ->append($this->getArrayNodeConfig())
+                ->append($this->getArrayNodeConfigPrototype())
+                ->append($this->getPrototypedArray())
+                ->append($this->getPrototypedArrayWithKeys())
+                ->append($this->getConfigCasted())
+                ->append($this->getConfigurationWithNormalization())
             ->end();
-
-        $rootNode = $this->getEnumNodeConfig($rootNode);
-
-        $rootNode = $this->getArrayNodeConfig($rootNode);
-
-        $rootNode = $this->getArrayNodeConfigPrototype($rootNode);
-
-        $rootNode = $this->getPrototypedArray($rootNode);
-
-        $rootNode = $this->getConfigCasted($rootNode);
-
-        $treeBuilder->buildTree();
 
         return $treeBuilder;
     }
@@ -67,13 +62,13 @@ class DatabaseConfiguration implements ConfigurationInterface
     /**
      * Gets Enum Configs
      *
-     * @param ArrayNodeDefinition $root
-     *
-     * @return ArrayNodeDefinition
+     * @return NodeDefinition
      */
-    private function getEnumNodeConfig(ArrayNodeDefinition $root)
+    private function getEnumNodeConfig()
     {
         //Enum Nodes => Enum nodes provide a constraint to match the given input against a set of values
+        $treeBuilder = new TreeBuilder();
+        $root        = $treeBuilder->root('enum');
         $root->children()
              ->enumNode('delivery')
                 ->values(['standard', 'expedited', 'priority'])
@@ -85,12 +80,12 @@ class DatabaseConfiguration implements ConfigurationInterface
     /**
      * Gets Array node definition
      *
-     * @param ArrayNodeDefinition $root
-     *
-     * @return ArrayNodeDefinition
+     * @return NodeDefinition
      */
-    private function getArrayNodeConfig(ArrayNodeDefinition $root)
+    private function getArrayNodeConfig()
     {
+        $treeBuilder = new TreeBuilder();
+        $root        = $treeBuilder->root('array_node_config');
         $root->children()
             ->arrayNode('connection')
                 ->children()
@@ -107,11 +102,9 @@ class DatabaseConfiguration implements ConfigurationInterface
     /**
      * Gets array node config prototype
      *
-     * @param ArrayNodeDefinition $root
-     *
-     * @return ArrayNodeDefinition
+     * @return NodeDefinition
      */
-    private function getArrayNodeConfigPrototype(ArrayNodeDefinition $root)
+    private function getArrayNodeConfigPrototype()
     {
         /*
          * -A prototype can be used to add a definition which may be repeated many times inside the current node.
@@ -168,6 +161,8 @@ class DatabaseConfiguration implements ConfigurationInterface
          * But if more than one file provides the configuration, the keys are lost as described above.
          */
 
+        $treeBuilder = new TreeBuilder();
+        $root        = $treeBuilder->root('array_node_config_prototype');
         $root
             ->fixXmlConfig('connection')
             ->children()
@@ -189,11 +184,9 @@ class DatabaseConfiguration implements ConfigurationInterface
     /**
      * Gets prototyped array where maintaining the keys
      *
-     * @param ArrayNodeDefinition $root
-     *
-     * @return ArrayNodeDefinition
+     * @return NodeDefinition
      */
-    private function getPrototypedArrayWithKeys(ArrayNodeDefinition $root)
+    private function getPrototypedArrayWithKeys()
     {
         /*
          * -Ex YAML config:
@@ -209,7 +202,7 @@ class DatabaseConfiguration implements ConfigurationInterface
                     username: value
                     password: value
          *
-         * -EX XML config:
+         * -Ex XML config:
          * <connection name='sf_connection' driver='' host=''  username='' password='' />
          * <connection name='default' driver='' host=''  username='' password='' />
          *
@@ -230,6 +223,8 @@ class DatabaseConfiguration implements ConfigurationInterface
          * )
          */
 
+        $treeBuilder = new TreeBuilder();
+        $root        = $treeBuilder->root('array_node_config_with_keys');
         $root
             ->fixXmlConfig('connection')
             ->children()
@@ -252,11 +247,9 @@ class DatabaseConfiguration implements ConfigurationInterface
     /**
      * Gets Configuration string casted to array
      *
-     * @param ArrayNodeDefinition $root
-     *
-     * @return ArrayNodeDefinition
+     * @return NodeDefinition
      */
-    private function getConfigCasted(ArrayNodeDefinition $root)
+    private function getConfigCasted()
     {
         /*
          * - $expBuilder->castToArray() : was added in symfony 3.3
@@ -264,6 +257,8 @@ class DatabaseConfiguration implements ConfigurationInterface
          *   string or numeric value where an array value is required.
          * - Use the castToArray() helper to turn those variables into arrays
          */
+        $treeBuilder = new TreeBuilder();
+        $root        = $treeBuilder->root('array_node_casted');
         $root
             ->children()
                 ->arrayNode('hosts')
@@ -277,11 +272,9 @@ class DatabaseConfiguration implements ConfigurationInterface
     /**
      * Gets prototyped array
      *
-     * @param ArrayNodeDefinition $root
-     *
-     * @return ArrayNodeDefinition
+     * @return NodeDefinition
      */
-    private function getPrototypedArray(ArrayNodeDefinition $root)
+    private function getPrototypedArray()
     {
         /*
          * -Ex YAML config
@@ -298,9 +291,10 @@ class DatabaseConfiguration implements ConfigurationInterface
          * )
          */
 
+        $treeBuilder = new TreeBuilder();
+        $root        = $treeBuilder->root('prototyped_array_node');
         $root
             ->fixXmlConfig('driver')
-            ->children()
                 ->arrayNode('drivers')
                     ->prototype('scalar')->end()
                 ->end()
@@ -308,40 +302,95 @@ class DatabaseConfiguration implements ConfigurationInterface
 
         return $root;
     }
+
+    /**
+     * Gets the configuration and controlling the normalization process
+     *
+     * Control the normalization process
+     *
+     * @return NodeDefinition
+     */
+    private function getConfigurationWithNormalization()
+    {
+        /*
+         * ->This two configuration will be accepted:
+         * ->YAML_1
+         * connection:
+         *     name: mysql_driver_connection
+         *     host: ~
+         *     driver:~
+         *     username:~
+         *     password:~
+         *
+         * ->YAML_2
+         * connection: mysql_driver_connection
+         */
+
+        $treeBuilder = new TreeBuilder();
+        $root        = $treeBuilder->root('connection_normalized');
+        $root->children()
+                ->arrayNode('connections')
+                    ->beforeNormalization()  //returns a NormalizationBuilder or a ExprBuilder instance
+                        ->ifString()
+                        //Changing a string value into an associative array with name as the key
+                        ->then(function($v){ return ['name' => $v]; })
+                    ->end()
+                    ->children()
+                        ->scalarNode('name')->isRequired()->end()
+                        ->scalarNode('driver')->end()
+                        ->scalarNode('host')->end()
+                        ->scalarNode('username')->end()
+                        ->scalarNode('password')->end()
+                    ->end()
+                ->end();
+
+        return $root;
+    }
+
+    /**
+     * @return NodeDefinition
+     */
+    private function getConfigurationWithAdvancedValidation()
+    {
+        /*
+         * ->The builder(ExprBuilder) is used for adding advanced validation rules to node definitions.
+         * ->A validation rule is defined by two parts:
+         *   -"if" part:
+         *      ifTrue()
+                ifString()
+                ifNull()
+                ifEmpty() (since Symfony 3.2)
+                ifArray()
+                ifInArray()
+                ifNotInArray()
+                always()
+         *
+         *   -"then" part:
+         *      then()
+                thenEmptyArray()
+                thenInvalid()
+                thenUnset()
+         * ->'Usually, "then" is a closure'. Its return value will be used as a new value for the node, instead of the node's
+         * original value.
+         */
+
+        $treeBuilder = new TreeBuilder();
+        $root        = $treeBuilder->root('connection_validation_rules');
+        $root->children()
+                ->arrayNode('connection')
+                    ->children()
+                        ->scalarNode('driver')
+                            ->isRequired()
+                            ->validate() //using ExpBuilder
+                            ->ifInArray(['mysql', 'sqlite', 'mssql'])
+                                ->thenInvalid('Invalid database driver %s')
+                            ->end()
+                        ->end()
+                    ->end()
+                ->end()
+             ->end();
+
+        return $root;
+    }
 }
-
-/******Node Type*******/
-//It is possible to validate the type of a provided value by using the appropriate node definition.
-
-/*
- * 1-scalar   : Generic type that includes booleans, strings, integers, floats and null
- * 2-boolean
- * 3-integer
- * 4-float
- * 5-enum     : Similar to scalar, but it only allows a finite set of values
- * 6-array
- * 7-variable : No validation
- */
-
-//Nodes are created using "$nodeBuilder->node($name, $type);" or "$nodeBuilder->xxxNode($name);"
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
