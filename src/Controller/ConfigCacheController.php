@@ -39,7 +39,7 @@ class ConfigCacheController
     {
         $this->loader    = $loader;
         $this->cachePath = $cachePath;
-        $this->configDir  = $configDir;
+        $this->configDir = $configDir;
     }
 
     /**
