@@ -7,7 +7,7 @@ use Symfony\Component\Config\Loader\LoaderInterface;
 use Symfony\Component\Config\Resource\FileResource;
 
 /**
- * Class ConfigCacheController
+ * Class ConfigCacheControlleryu
  *
  * @package Config\Formation\Controllers
  */
